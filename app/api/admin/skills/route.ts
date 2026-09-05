@@ -77,6 +77,46 @@ export async function POST(request: Request) {
   }
 }
 
+export async function PUT(request: Request) {
+  const isAuth = await verifyAdminSession();
+  if (!isAuth) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const body = await request.json();
+    const { id, ...updates } = body;
+
+    if (!id) {
+      return NextResponse.json({ error: "Missing skill id" }, { status: 400 });
+    }
+
+    if (updates.sort_order !== undefined) {
+      updates.sort_order = Number(updates.sort_order) || 0;
+    }
+    if (updates.featured !== undefined) {
+      updates.featured = Boolean(updates.featured);
+    }
+
+    if (isSupabaseConfigured && supabaseAdmin) {
+      const { data, error } = await supabaseAdmin
+        .from("skills")
+        .update(updates)
+        .eq("id", id)
+        .select();
+
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 400 });
+      }
+      return NextResponse.json({ success: true, data });
+    }
+
+    return NextResponse.json({ success: true, message: "Skill updated in demo mode." });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}
+
 export async function DELETE(request: Request) {
   const isAuth = await verifyAdminSession();
   if (!isAuth) {

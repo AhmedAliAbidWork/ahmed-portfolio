@@ -122,6 +122,16 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "Missing project id or slug" }, { status: 400 });
     }
 
+    if (updates.technologies && typeof updates.technologies === "string") {
+      updates.technologies = updates.technologies.split(",").map((t: string) => t.trim()).filter(Boolean);
+    }
+    if (updates.sort_order !== undefined) {
+      updates.sort_order = Number(updates.sort_order) || 0;
+    }
+    if (updates.featured !== undefined) {
+      updates.featured = Boolean(updates.featured);
+    }
+
     if (isSupabaseConfigured && supabaseAdmin) {
       const query = id
         ? supabaseAdmin.from("projects").update(updates).eq("id", id)

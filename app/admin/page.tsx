@@ -19,7 +19,9 @@ import {
   Eye,
   Star,
   Database,
-  ArrowUpRight
+  ArrowUpRight,
+  Pencil,
+  X
 } from "lucide-react";
 
 export default function AdminDashboardPage() {
@@ -35,6 +37,11 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [dbSource, setDbSource] = useState<string>("fallback");
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  // Edit states
+  const [editingProject, setEditingProject] = useState<any | null>(null);
+  const [editingExperience, setEditingExperience] = useState<any | null>(null);
+  const [editingSkill, setEditingSkill] = useState<any | null>(null);
 
   // Form states for modals/drawers
   const [showAddProject, setShowAddProject] = useState(false);
@@ -154,6 +161,26 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const handleUpdateProject = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingProject) return;
+    try {
+      const res = await fetch("/api/admin/projects", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editingProject),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      setFeedback({ type: "success", text: "Project updated successfully!" });
+      setEditingProject(null);
+      loadData();
+    } catch (err: any) {
+      setFeedback({ type: "error", text: err.message || "Failed to update project." });
+    }
+  };
+
   const handleDeleteProject = async (id: string, slug?: string) => {
     if (!confirm("Are you sure you want to delete this project?")) return;
     try {
@@ -186,6 +213,26 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const handleUpdateExperience = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingExperience) return;
+    try {
+      const res = await fetch("/api/admin/experience", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editingExperience),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      setFeedback({ type: "success", text: "Experience record updated!" });
+      setEditingExperience(null);
+      loadData();
+    } catch (err: any) {
+      setFeedback({ type: "error", text: err.message || "Failed to update experience." });
+    }
+  };
+
   const handleDeleteExperience = async (id: string) => {
     if (!confirm("Delete this experience entry?")) return;
     try {
@@ -214,6 +261,26 @@ export default function AdminDashboardPage() {
       loadData();
     } catch (err: any) {
       setFeedback({ type: "error", text: err.message });
+    }
+  };
+
+  const handleUpdateSkill = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingSkill) return;
+    try {
+      const res = await fetch("/api/admin/skills", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editingSkill),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      setFeedback({ type: "success", text: "Skill updated successfully!" });
+      setEditingSkill(null);
+      loadData();
+    } catch (err: any) {
+      setFeedback({ type: "error", text: err.message || "Failed to update skill." });
     }
   };
 
@@ -652,14 +719,27 @@ export default function AdminDashboardPage() {
                           )}
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteProject(proj.id, proj.slug)}
-                            className="p-2 text-rose-400 hover:text-rose-300 hover:bg-rose-950/40 rounded-lg transition-colors"
-                            title="Delete project"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          <div className="flex items-center justify-end gap-1">
+                            <button
+                              type="button"
+                              onClick={() => setEditingProject({
+                                ...proj,
+                                technologies: Array.isArray(proj.technologies) ? proj.technologies.join(", ") : proj.technologies || ""
+                              })}
+                              className="p-2 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-950/40 rounded-lg transition-colors"
+                              title="Edit project"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteProject(proj.id, proj.slug)}
+                              className="p-2 text-rose-400 hover:text-rose-300 hover:bg-rose-950/40 rounded-lg transition-colors"
+                              title="Delete project"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -798,14 +878,28 @@ export default function AdminDashboardPage() {
                     </ul>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteExperience(exp.id)}
-                    className="p-2 text-rose-400 hover:text-rose-300 hover:bg-rose-950/40 rounded-lg shrink-0"
-                    title="Delete role"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setEditingExperience({
+                        ...exp,
+                        description: Array.isArray(exp.description) ? exp.description.join("\n") : exp.description || "",
+                        technologies: Array.isArray(exp.technologies) ? exp.technologies.join(", ") : exp.technologies || ""
+                      })}
+                      className="p-2 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-950/40 rounded-lg transition-colors"
+                      title="Edit role"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteExperience(exp.id)}
+                      className="p-2 text-rose-400 hover:text-rose-300 hover:bg-rose-950/40 rounded-lg transition-colors"
+                      title="Delete role"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -889,14 +983,24 @@ export default function AdminDashboardPage() {
                     <div className="text-sm font-semibold text-white">{skill.name}</div>
                     <div className="text-[10px] font-mono text-slate-400">{skill.category} • {skill.level}</div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteSkill(skill.id)}
-                    className="opacity-0 group-hover:opacity-100 p-1.5 text-rose-400 hover:text-rose-300 transition-opacity"
-                    title="Remove skill"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      type="button"
+                      onClick={() => setEditingSkill({ ...skill })}
+                      className="p-1.5 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-950/40 rounded transition-colors"
+                      title="Edit skill"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteSkill(skill.id)}
+                      className="p-1.5 text-rose-400 hover:text-rose-300 hover:bg-rose-950/40 rounded transition-colors"
+                      title="Remove skill"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -962,6 +1066,408 @@ export default function AdminDashboardPage() {
                   </div>
                 ))
               )}
+            </div>
+          </div>
+        )}
+
+        {/* ===================== EDIT PROJECT MODAL ===================== */}
+        {editingProject && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm overflow-y-auto">
+            <div className="relative w-full max-w-2xl bg-[#0D0F18] border border-cyan-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 my-8 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-cyan-950/60 border border-cyan-500/30 text-cyan-400">
+                    <Pencil className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-white">Edit Project</h3>
+                    <p className="text-xs text-slate-400 font-mono">Updating: {editingProject.title}</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setEditingProject(null)}
+                  className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-white/[0.05]"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleUpdateProject} className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">Title</label>
+                    <input
+                      type="text"
+                      required
+                      value={editingProject.title || ""}
+                      onChange={(e) => setEditingProject({ ...editingProject, title: e.target.value })}
+                      className="w-full px-3 py-2 rounded-lg bg-black/40 border border-white/10 text-white text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">Tagline</label>
+                    <input
+                      type="text"
+                      value={editingProject.tagline || ""}
+                      onChange={(e) => setEditingProject({ ...editingProject, tagline: e.target.value })}
+                      className="w-full px-3 py-2 rounded-lg bg-black/40 border border-white/10 text-white text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Description</label>
+                  <textarea
+                    rows={3}
+                    required
+                    value={editingProject.description || ""}
+                    onChange={(e) => setEditingProject({ ...editingProject, description: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg bg-black/40 border border-white/10 text-white text-sm resize-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Problem Solved / Impact Highlight</label>
+                  <input
+                    type="text"
+                    value={editingProject.problem_solved || ""}
+                    onChange={(e) => setEditingProject({ ...editingProject, problem_solved: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg bg-black/40 border border-white/10 text-white text-sm"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">Technologies (comma separated)</label>
+                    <input
+                      type="text"
+                      value={editingProject.technologies || ""}
+                      onChange={(e) => setEditingProject({ ...editingProject, technologies: e.target.value })}
+                      className="w-full px-3 py-2 rounded-lg bg-black/40 border border-white/10 text-white text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">Metrics Highlight Badge</label>
+                    <input
+                      type="text"
+                      value={editingProject.metrics || ""}
+                      onChange={(e) => setEditingProject({ ...editingProject, metrics: e.target.value })}
+                      className="w-full px-3 py-2 rounded-lg bg-black/40 border border-white/10 text-white text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">Live Demo URL</label>
+                    <input
+                      type="text"
+                      value={editingProject.live_url || ""}
+                      onChange={(e) => setEditingProject({ ...editingProject, live_url: e.target.value })}
+                      className="w-full px-3 py-2 rounded-lg bg-black/40 border border-white/10 text-white text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">GitHub URL</label>
+                    <input
+                      type="text"
+                      value={editingProject.github_url || ""}
+                      onChange={(e) => setEditingProject({ ...editingProject, github_url: e.target.value })}
+                      className="w-full px-3 py-2 rounded-lg bg-black/40 border border-white/10 text-white text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">Image URL</label>
+                    <input
+                      type="text"
+                      value={editingProject.image_url || ""}
+                      onChange={(e) => setEditingProject({ ...editingProject, image_url: e.target.value })}
+                      className="w-full px-3 py-2 rounded-lg bg-black/40 border border-white/10 text-white text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">Bento Grid Span</label>
+                    <select
+                      value={editingProject.bento_span || "medium"}
+                      onChange={(e) => setEditingProject({ ...editingProject, bento_span: e.target.value })}
+                      className="w-full px-3 py-2 rounded-lg bg-[#141724] border border-white/10 text-white text-sm"
+                    >
+                      <option value="large">Large (7 cols / spotlight)</option>
+                      <option value="medium">Medium (5 cols)</option>
+                      <option value="tall">Tall (4 cols)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-4 border-t border-white/[0.08]">
+                  <label className="flex items-center gap-2 text-xs font-mono text-slate-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(editingProject.featured)}
+                      onChange={(e) => setEditingProject({ ...editingProject, featured: e.target.checked })}
+                      className="rounded bg-black/40 border-white/20 text-cyan-400 focus:ring-0"
+                    />
+                    Featured Case Study
+                  </label>
+
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setEditingProject(null)}
+                      className="px-4 py-2 rounded-xl text-xs font-mono text-slate-400 hover:text-white"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-5 py-2.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold text-xs uppercase tracking-wider shadow-[0_0_20px_rgba(6,182,212,0.3)]"
+                    >
+                      Save Changes
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* ===================== EDIT EXPERIENCE MODAL ===================== */}
+        {editingExperience && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm overflow-y-auto">
+            <div className="relative w-full max-w-2xl bg-[#0D0F18] border border-cyan-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 my-8 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-cyan-950/60 border border-cyan-500/30 text-cyan-400">
+                    <Pencil className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-white">Edit Experience Role</h3>
+                    <p className="text-xs text-slate-400 font-mono">Updating: {editingExperience.position} @ {editingExperience.company}</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setEditingExperience(null)}
+                  className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-white/[0.05]"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleUpdateExperience} className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">Company</label>
+                    <input
+                      type="text"
+                      required
+                      value={editingExperience.company || ""}
+                      onChange={(e) => setEditingExperience({ ...editingExperience, company: e.target.value })}
+                      className="w-full px-3 py-2 rounded-lg bg-black/40 border border-white/10 text-white text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">Position / Title</label>
+                    <input
+                      type="text"
+                      required
+                      value={editingExperience.position || ""}
+                      onChange={(e) => setEditingExperience({ ...editingExperience, position: e.target.value })}
+                      className="w-full px-3 py-2 rounded-lg bg-black/40 border border-white/10 text-white text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">Period</label>
+                    <input
+                      type="text"
+                      required
+                      value={editingExperience.period || ""}
+                      onChange={(e) => setEditingExperience({ ...editingExperience, period: e.target.value })}
+                      placeholder="e.g. 12/2023 — Present"
+                      className="w-full px-3 py-2 rounded-lg bg-black/40 border border-white/10 text-white text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">Location</label>
+                    <input
+                      type="text"
+                      value={editingExperience.location || ""}
+                      onChange={(e) => setEditingExperience({ ...editingExperience, location: e.target.value })}
+                      className="w-full px-3 py-2 rounded-lg bg-black/40 border border-white/10 text-white text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Key Responsibilities / Bullets (one per line)</label>
+                  <textarea
+                    rows={4}
+                    value={editingExperience.description || ""}
+                    onChange={(e) => setEditingExperience({ ...editingExperience, description: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg bg-black/40 border border-white/10 text-white text-sm resize-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Technologies (comma separated)</label>
+                  <input
+                    type="text"
+                    value={editingExperience.technologies || ""}
+                    onChange={(e) => setEditingExperience({ ...editingExperience, technologies: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg bg-black/40 border border-white/10 text-white text-sm"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between pt-4 border-t border-white/[0.08]">
+                  <label className="flex items-center gap-2 text-xs font-mono text-slate-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(editingExperience.is_current)}
+                      onChange={(e) => setEditingExperience({ ...editingExperience, is_current: e.target.checked })}
+                      className="rounded bg-black/40 border-white/20 text-cyan-400 focus:ring-0"
+                    />
+                    Current Active Role
+                  </label>
+
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setEditingExperience(null)}
+                      className="px-4 py-2 rounded-xl text-xs font-mono text-slate-400 hover:text-white"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-5 py-2.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold text-xs uppercase tracking-wider shadow-[0_0_20px_rgba(6,182,212,0.3)]"
+                    >
+                      Save Changes
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* ===================== EDIT SKILL MODAL ===================== */}
+        {editingSkill && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+            <div className="relative w-full max-w-md bg-[#0D0F18] border border-cyan-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
+              <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-cyan-950/60 border border-cyan-500/30 text-cyan-400">
+                    <Pencil className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-white">Edit Skill</h3>
+                    <p className="text-xs text-slate-400 font-mono">{editingSkill.name}</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setEditingSkill(null)}
+                  className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-white/[0.05]"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleUpdateSkill} className="space-y-4">
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Category</label>
+                  <select
+                    value={editingSkill.category || "App Development"}
+                    onChange={(e) => setEditingSkill({ ...editingSkill, category: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg bg-[#141724] border border-white/10 text-white text-sm"
+                  >
+                    <option value="App Development">App Development</option>
+                    <option value="Backend & Database">Backend &amp; Database</option>
+                    <option value="APIs & Security">APIs &amp; Security</option>
+                    <option value="Tools & Leadership">Tools &amp; Leadership</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Skill Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={editingSkill.name || ""}
+                    onChange={(e) => setEditingSkill({ ...editingSkill, name: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg bg-black/40 border border-white/10 text-white text-sm"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">Proficiency Level</label>
+                    <select
+                      value={editingSkill.level || "Expert"}
+                      onChange={(e) => setEditingSkill({ ...editingSkill, level: e.target.value })}
+                      className="w-full px-3 py-2 rounded-lg bg-[#141724] border border-white/10 text-white text-sm"
+                    >
+                      <option value="Expert">Expert</option>
+                      <option value="Advanced">Advanced</option>
+                      <option value="Intermediate">Intermediate</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">Icon Name</label>
+                    <select
+                      value={editingSkill.icon_name || "Code2"}
+                      onChange={(e) => setEditingSkill({ ...editingSkill, icon_name: e.target.value })}
+                      className="w-full px-3 py-2 rounded-lg bg-[#141724] border border-white/10 text-white text-sm"
+                    >
+                      <option value="Code2">Code</option>
+                      <option value="Flame">Flame (Firebase/FF)</option>
+                      <option value="Atom">Atom (Flutter)</option>
+                      <option value="Database">Database</option>
+                      <option value="Server">Server</option>
+                      <option value="Globe">Globe</option>
+                      <option value="ShieldCheck">Shield</option>
+                      <option value="Sparkles">Sparkles</option>
+                      <option value="GitBranch">Git</option>
+                      <option value="Layout">Layout</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-4 border-t border-white/[0.08]">
+                  <label className="flex items-center gap-2 text-xs font-mono text-slate-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(editingSkill.featured)}
+                      onChange={(e) => setEditingSkill({ ...editingSkill, featured: e.target.checked })}
+                      className="rounded bg-black/40 border-white/20 text-cyan-400 focus:ring-0"
+                    />
+                    Featured
+                  </label>
+
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setEditingSkill(null)}
+                      className="px-4 py-2 rounded-xl text-xs font-mono text-slate-400 hover:text-white"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-5 py-2.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold text-xs uppercase tracking-wider shadow-[0_0_20px_rgba(6,182,212,0.3)]"
+                    >
+                      Save Changes
+                    </button>
+                  </div>
+                </div>
+              </form>
             </div>
           </div>
         )}
