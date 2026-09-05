@@ -1,0 +1,62 @@
+<svg width="1200" height="675" viewBox="0 0 1200 675" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="675" fill="#0A0A14"/>
+  <defs>
+    <radialGradient id="purpleGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#8B5CF6" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#8B5CF6" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="600" cy="337" r="400" fill="url(#purpleGlow)"/>
+
+  <g transform="translate(140, 90)">
+    <!-- Header component card -->
+    <rect width="920" height="495" rx="16" fill="#121324" stroke="rgba(139,92,246,0.25)" stroke-width="1.5"/>
+    
+    <!-- Design System Preview Header -->
+    <text x="40" y="55" fill="#F8FAFC" font-family="system-ui, sans-serif" font-size="20" font-weight="700">Hyperion UI Design Tokens</text>
+    <text x="40" y="80" fill="#94A3B8" font-family="system-ui, sans-serif" font-size="13">@hyperion/react v2.4.0 • 42 components verified</text>
+
+    <!-- Component Row 1: Buttons & Inputs -->
+    <g transform="translate(40, 120)">
+      <rect width="400" height="150" rx="10" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.06)"/>
+      <text x="24" y="36" fill="#8B5CF6" font-family="system-ui, sans-serif" font-size="12" font-weight="600">INTERACTIVE VARIANTS</text>
+
+      <!-- Buttons -->
+      <rect x="24" y="56" width="105" height="38" rx="8" fill="#8B5CF6"/>
+      <text x="76" y="80" fill="#FFFFFF" font-family="system-ui, sans-serif" font-size="13" font-weight="600" text-anchor="middle">Primary</text>
+
+      <rect x="141" y="56" width="105" height="38" rx="8" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.15)"/>
+      <text x="193" y="80" fill="#F1F5F9" font-family="system-ui, sans-serif" font-size="13" font-weight="600" text-anchor="middle">Secondary</text>
+
+      <rect x="258" y="56" width="105" height="38" rx="8" fill="transparent" stroke="rgba(139,92,246,0.5)"/>
+      <text x="310" y="80" fill="#C4B5FD" font-family="system-ui, sans-serif" font-size="13" font-weight="600" text-anchor="middle">Ghost</text>
+
+      <!-- Input mock -->
+      <rect x="24" y="106" width="340" height="30" rx="6" fill="#0C0D1A" stroke="rgba(139,92,246,0.3)"/>
+      <text x="40" y="126" fill="#64748B" font-family="system-ui, sans-serif" font-size="12">Search design tokens or classes...</text>
+    </g>
+
+    <!-- Component Row 2: Modal & Dialog Card -->
+    <g transform="translate(470, 120)">
+      <rect width="410" height="150" rx="10" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.06)"/>
+      <text x="24" y="36" fill="#06B6D4" font-family="system-ui, sans-serif" font-size="12" font-weight="600">ACCESSIBILITY RADIX PRIMITIVES</text>
+      <rect x="24" y="56" width="362" height="74" rx="8" fill="#181B30" stroke="rgba(255,255,255,0.08)"/>
+      <circle cx="50" cy="93" r="16" fill="#06B6D4" fill-opacity="0.2"/>
+      <text x="76" y="88" fill="#F8FAFC" font-family="system-ui, sans-serif" font-size="13" font-weight="600">Keyboard Navigation Verified</text>
+      <text x="76" y="106" fill="#94A3B8" font-family="system-ui, sans-serif" font-size="11">WAI-ARIA 1.2 compliant focus lock &amp; announcer</text>
+    </g>
+
+    <!-- Code Block representation below -->
+    <g transform="translate(40, 295)">
+      <rect width="840" height="160" rx="10" fill="#090A13" stroke="rgba(255,255,255,0.05)"/>
+      <circle cx="24" cy="22" r="5" fill="#EF4444" fill-opacity="0.6"/>
+      <circle cx="40" cy="22" r="5" fill="#F59E0B" fill-opacity="0.6"/>
+      <circle cx="56" cy="22" r="5" fill="#10B981" fill-opacity="0.6"/>
+      
+      <text x="24" y="60" fill="#8B5CF6" font-family="monospace" font-size="13">import { Button, Dialog, Tooltip } from '@hyperion/react';</text>
+      <text x="24" y="86" fill="#94A3B8" font-family="monospace" font-size="13">&lt;Dialog trigger={&lt;Button variant="primary"&gt;Deploy Instance&lt;/Button&gt;}&gt;</text>
+      <text x="44" y="112" fill="#06B6D4" font-family="monospace" font-size="13">&lt;Dialog.Content elevation="high" backdrop="blur"&gt;</text>
+      <text x="64" y="138" fill="#CBD5E1" font-family="monospace" font-size="13">&lt;p&gt;Zero runtime overhead with tailwind-merge tokens.&lt;/p&gt;</text>
+    </g>
+  </g>
+</svg>
