@@ -9,8 +9,19 @@ import { Education } from "@/components/education";
 import { GithubSection } from "@/components/github";
 import { Contact } from "@/components/contact";
 import { Footer } from "@/components/footer";
+import { getProjects, getExperience, getSkillsCategories } from "@/lib/data-service";
 
-export default function HomePage() {
+// Ensure page always fetches live data from Supabase
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+export default async function HomePage() {
+  const [projects, experience, skillsCategories] = await Promise.all([
+    getProjects(),
+    getExperience(),
+    getSkillsCategories(),
+  ]);
+
   return (
     <div className="relative min-h-screen bg-[#08090E] text-slate-100 overflow-x-hidden selection:bg-cyan-500/20 selection:text-cyan-200">
       {/* Background Ambience Layer */}
@@ -28,13 +39,13 @@ export default function HomePage() {
         <About />
 
         {/* Skills Section */}
-        <Skills />
+        <Skills initialCategories={skillsCategories} />
 
         {/* Selected Projects (Bento Showcase) */}
-        <Projects />
+        <Projects initialProjects={projects} />
 
         {/* Experience Timeline */}
-        <Experience />
+        <Experience initialExperience={experience} />
 
         {/* Education & Certifications */}
         <Education />

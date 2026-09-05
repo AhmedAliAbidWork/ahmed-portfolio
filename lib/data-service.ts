@@ -1,19 +1,25 @@
-import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import { supabase, supabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import { portfolioData } from "@/data/portfolio";
 import { ProjectItem, ExperienceItem, SkillCategory } from "@/types/portfolio";
 
 export async function getProjects(): Promise<ProjectItem[]> {
-  if (!isSupabaseConfigured || !supabase) {
+  const client = supabaseAdmin || supabase;
+  if (!isSupabaseConfigured || !client) {
     return portfolioData.projects.items;
   }
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from("projects")
       .select("*")
       .order("sort_order", { ascending: true });
 
-    if (error || !data || data.length === 0) {
+    if (error) {
+      console.error("Error fetching projects from Supabase:", error.message || error);
+      return portfolioData.projects.items;
+    }
+
+    if (!data || data.length === 0) {
       return portfolioData.projects.items;
     }
 
@@ -21,15 +27,19 @@ export async function getProjects(): Promise<ProjectItem[]> {
       id: item.slug || item.id,
       title: item.title,
       tagline: item.tagline || "",
-      description: item.description,
+      description: item.description || "",
       problemSolved: item.problem_solved || "",
-      technologies: item.technologies || [],
+      technologies: Array.isArray(item.technologies)
+        ? item.technologies
+        : typeof item.technologies === "string"
+        ? item.technologies.split(",").map((t: string) => t.trim())
+        : [],
       metrics: item.metrics || "",
       githubUrl: item.github_url || "",
       liveUrl: item.live_url || "",
       image: item.image_url || "/projects/evo-signal.svg",
       featured: Boolean(item.featured),
-      bentoSpan: item.bento_span as "large" | "medium" | "tall",
+      bentoSpan: (item.bento_span as "large" | "medium" | "tall") || "medium",
     }));
   } catch (err) {
     console.error("Error fetching projects from Supabase:", err);
@@ -38,12 +48,13 @@ export async function getProjects(): Promise<ProjectItem[]> {
 }
 
 export async function getExperience(): Promise<ExperienceItem[]> {
-  if (!isSupabaseConfigured || !supabase) {
+  const client = supabaseAdmin || supabase;
+  if (!isSupabaseConfigured || !client) {
     return portfolioData.experience.items;
   }
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from("experience")
       .select("*")
       .order("sort_order", { ascending: true });
@@ -59,8 +70,16 @@ export async function getExperience(): Promise<ExperienceItem[]> {
       period: item.period,
       location: item.location || "",
       type: item.type || "Full-Time",
-      description: item.description || [],
-      technologies: item.technologies || [],
+      description: Array.isArray(item.description)
+        ? item.description
+        : typeof item.description === "string"
+        ? [item.description]
+        : [],
+      technologies: Array.isArray(item.technologies)
+        ? item.technologies
+        : typeof item.technologies === "string"
+        ? item.technologies.split(",").map((t: string) => t.trim())
+        : [],
       current: Boolean(item.is_current),
     }));
   } catch (err) {

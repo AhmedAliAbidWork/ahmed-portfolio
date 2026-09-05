@@ -2,8 +2,13 @@ import { Briefcase, Calendar, MapPin, CheckCircle2 } from "lucide-react";
 import { portfolioData } from "@/data/portfolio";
 import { ExperienceItem } from "@/types/portfolio";
 
-export function Experience() {
+interface ExperienceProps {
+  initialExperience?: ExperienceItem[];
+}
+
+export function Experience({ initialExperience }: ExperienceProps = {}) {
   const { experience } = portfolioData;
+  const items = initialExperience && initialExperience.length > 0 ? initialExperience : experience.items;
 
   return (
     <section id="experience" className="py-24 px-4 sm:px-6 relative">
@@ -24,7 +29,7 @@ export function Experience() {
 
         {/* Timeline Container */}
         <div className="relative pl-6 sm:pl-8 border-l border-white/[0.1] space-y-12">
-          {experience.items.map((item: ExperienceItem, idx: number) => {
+          {items.map((item: ExperienceItem, idx: number) => {
             return (
               <div key={item.id} className="relative group">
                 

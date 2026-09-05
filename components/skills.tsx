@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import { GithubIcon, FigmaIcon } from "@/components/icons";
 import { portfolioData } from "@/data/portfolio";
-import { SkillItem } from "@/types/portfolio";
+import { SkillItem, SkillCategory } from "@/types/portfolio";
 
 // Map icon names from portfolioData to Lucide components
 const skillIconMap: Record<string, any> = {
@@ -48,11 +48,16 @@ const skillIconMap: Record<string, any> = {
   Terminal: Terminal
 };
 
-export function Skills() {
+interface SkillsProps {
+  initialCategories?: SkillCategory[];
+}
+
+export function Skills({ initialCategories }: SkillsProps = {}) {
   const { skills } = portfolioData;
+  const categories = initialCategories && initialCategories.length > 0 ? initialCategories : skills.categories;
   const [selectedCategoryIndex, setSelectedCategoryIndex] = useState(0);
 
-  const activeCategory = skills.categories[selectedCategoryIndex];
+  const activeCategory = categories[selectedCategoryIndex] || categories[0] || skills.categories[0];
 
   return (
     <section id="skills" className="py-24 px-4 sm:px-6 relative">
@@ -75,7 +80,7 @@ export function Skills() {
 
         {/* Category Navigation Tabs */}
         <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-[#0D0F18] border border-white/[0.08] mb-10 w-fit">
-          {skills.categories.map((category, idx) => {
+          {categories.map((category, idx) => {
             const isSelected = selectedCategoryIndex === idx;
             return (
               <button

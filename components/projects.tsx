@@ -6,8 +6,13 @@ import { GithubIcon } from "@/components/icons";
 import { portfolioData } from "@/data/portfolio";
 import { ProjectItem } from "@/types/portfolio";
 
-export function Projects() {
+interface ProjectsProps {
+  initialProjects?: ProjectItem[];
+}
+
+export function Projects({ initialProjects }: ProjectsProps = {}) {
   const { projects } = portfolioData;
+  const items = initialProjects && initialProjects.length > 0 ? initialProjects : projects.items;
 
   return (
     <section id="projects" className="py-24 px-4 sm:px-6 relative">
@@ -31,14 +36,29 @@ export function Projects() {
         {/* Bento Grid Container */}
         {/* On desktop: 12-column asymmetric bento layout; on mobile: 1-column stack */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {projects.items.map((project: ProjectItem, index: number) => {
-            // Asymmetric layout span
-            const isLarge = project.bentoSpan === "large" || index === 0 || index === 3;
-            const colSpanClass = isLarge ? "lg:col-span-7" : "lg:col-span-5";
+          {items.map((project: ProjectItem, index: number) => {
+            // Asymmetric layout span for any number of projects dynamically
+            let colSpanClass = "lg:col-span-6";
+            if (project.bentoSpan === "large") {
+              colSpanClass = "lg:col-span-7";
+            } else if (project.bentoSpan === "tall") {
+              colSpanClass = "lg:col-span-4";
+            } else if (project.bentoSpan === "medium") {
+              colSpanClass = "lg:col-span-5";
+            } else {
+              // Alternating rhythm fallback (7+5, 5+7)
+              const posInFour = index % 4;
+              colSpanClass = posInFour === 0 || posInFour === 3 ? "lg:col-span-7" : "lg:col-span-5";
+            }
+
+            // If it's a single trailing odd item, let it span 12 columns gracefully
+            if (index === items.length - 1 && items.length % 2 !== 0 && items.length > 1) {
+              colSpanClass = "lg:col-span-12";
+            }
 
             return (
               <article
-                key={project.id}
+                key={project.id || `project-${index}`}
                 className={`${colSpanClass} group relative flex flex-col rounded-3xl bg-[#0D0F18]/90 border border-white/[0.08] hover:border-cyan-500/40 transition-all duration-300 overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.5)] hover:shadow-[0_20px_50px_rgba(6,182,212,0.12)] hover:-translate-y-1`}
               >
                 {/* Project Image Preview Container */}
