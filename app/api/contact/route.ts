@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import { supabase, supabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 
 export async function POST(request: Request) {
   try {
@@ -13,33 +13,45 @@ export async function POST(request: Request) {
       );
     }
 
-    if (isSupabaseConfigured && supabase) {
-      const { error } = await supabase.from("messages").insert([
+    const client = supabaseAdmin || supabase;
+
+    if (isSupabaseConfigured && client) {
+      const { data, error } = await client.from("messages").insert([
         {
           name: name.trim(),
           email: email.trim(),
           subject: (subject || "").trim(),
           message: message.trim(),
+          is_read: false,
         },
-      ]);
+      ]).select();
 
       if (error) {
-        console.error("Supabase message insert error:", error);
-        // Fallback gracefully so visitor gets positive UX
+        console.error("Supabase message insert error:", error.message || error);
+        return NextResponse.json(
+          { error: "Could not save message: " + error.message },
+          { status: 500 }
+        );
       }
-    } else {
-      console.log("Contact submission received (local mode):", {
-        name,
-        email,
-        subject,
-        message,
-        timestamp: new Date().toISOString(),
+
+      return NextResponse.json({
+        success: true,
+        message: "Thank you! Your message has been received.",
+        data: data?.[0],
       });
     }
 
+    console.log("Contact submission received (local/demo mode):", {
+      name,
+      email,
+      subject,
+      message,
+      timestamp: new Date().toISOString(),
+    });
+
     return NextResponse.json({
       success: true,
-      message: "Thank you! Your message has been received.",
+      message: "Thank you! Your message has been received (demo mode).",
     });
   } catch (err: any) {
     console.error("Contact API error:", err);

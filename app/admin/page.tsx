@@ -21,7 +21,12 @@ import {
   Database,
   ArrowUpRight,
   Pencil,
-  X
+  X,
+  MailCheck,
+  MailOpen,
+  Copy,
+  Check,
+  Inbox
 } from "lucide-react";
 
 export default function AdminDashboardPage() {
@@ -37,6 +42,10 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [dbSource, setDbSource] = useState<string>("fallback");
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  // Inquiries filter & copy states
+  const [inquiryFilter, setInquiryFilter] = useState<"all" | "unread" | "read">("all");
+  const [copiedEmailId, setCopiedEmailId] = useState<string | null>(null);
 
   // Edit states
   const [editingProject, setEditingProject] = useState<any | null>(null);
@@ -308,6 +317,40 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const handleToggleRead = async (id: string, currentRead: boolean) => {
+    try {
+      const res = await fetch("/api/admin/messages", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, is_read: !currentRead }),
+      });
+      if (!res.ok) throw new Error("Failed to update status");
+
+      setMessages((prev) =>
+        prev.map((m) => (m.id === id ? { ...m, is_read: !currentRead } : m))
+      );
+      setFeedback({
+        type: "success",
+        text: !currentRead ? "Inquiry marked as read." : "Inquiry marked as unread.",
+      });
+    } catch (err: any) {
+      setFeedback({ type: "error", text: err.message });
+    }
+  };
+
+  const handleCopySenderEmail = (id: string, email: string) => {
+    navigator.clipboard.writeText(email);
+    setCopiedEmailId(id);
+    setTimeout(() => setCopiedEmailId(null), 2000);
+  };
+
+  const unreadCount = messages.filter((m) => !m.is_read).length;
+  const filteredMessages = messages.filter((m) => {
+    if (inquiryFilter === "unread") return !m.is_read;
+    if (inquiryFilter === "read") return Boolean(m.is_read);
+    return true;
+  });
+
   return (
     <div className="min-h-screen bg-[#08090E] text-slate-100 flex flex-col font-sans">
       
@@ -444,7 +487,12 @@ export default function AdminDashboardPage() {
             }`}
           >
             <Mail className="w-3.5 h-3.5" />
-            Inquiries ({messages.length})
+            <span>Inquiries ({messages.length})</span>
+            {unreadCount > 0 && (
+              <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 font-bold">
+                {unreadCount} new
+              </span>
+            )}
           </button>
 
           <button
@@ -494,7 +542,14 @@ export default function AdminDashboardPage() {
                   <span>Inquiries</span>
                   <Mail className="w-4 h-4 text-cyan-400" />
                 </div>
-                <div className="text-3xl font-bold text-white font-mono">{messages.length}</div>
+                <div className="flex items-baseline gap-2">
+                  <div className="text-3xl font-bold text-white font-mono">{messages.length}</div>
+                  {unreadCount > 0 && (
+                    <span className="text-xs font-mono text-cyan-400 font-semibold">
+                      ({unreadCount} unread)
+                    </span>
+                  )}
+                </div>
                 <p className="text-xs text-slate-500 mt-1">Contact form messages</p>
               </div>
             </div>
@@ -1010,43 +1065,178 @@ export default function AdminDashboardPage() {
         {/* ===================== TAB: MESSAGES ===================== */}
         {activeTab === "messages" && (
           <div className="space-y-6">
-            <div>
-              <h2 className="text-xl font-bold text-white">Client &amp; Recruiter Inquiries</h2>
-              <p className="text-xs text-slate-400">Messages received through your portfolio contact form</p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                  <span>Client &amp; Recruiter Inquiries</span>
+                  {unreadCount > 0 && (
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                      {unreadCount} unread
+                    </span>
+                  )}
+                </h2>
+                <p className="text-xs text-slate-400">
+                  Direct messages submitted through your portfolio contact form
+                </p>
+              </div>
+
+              {/* Inquiries Filter Pills */}
+              <div className="flex items-center gap-1.5 p-1 rounded-xl bg-black/40 border border-white/[0.08]">
+                <button
+                  type="button"
+                  onClick={() => setInquiryFilter("all")}
+                  className={`px-3 py-1 rounded-lg text-xs font-mono transition-colors ${
+                    inquiryFilter === "all"
+                      ? "bg-cyan-500/20 text-cyan-300 font-semibold"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  All ({messages.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setInquiryFilter("unread")}
+                  className={`px-3 py-1 rounded-lg text-xs font-mono transition-colors ${
+                    inquiryFilter === "unread"
+                      ? "bg-cyan-500/20 text-cyan-300 font-semibold"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  Unread ({unreadCount})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setInquiryFilter("read")}
+                  className={`px-3 py-1 rounded-lg text-xs font-mono transition-colors ${
+                    inquiryFilter === "read"
+                      ? "bg-cyan-500/20 text-cyan-300 font-semibold"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  Read ({messages.length - unreadCount})
+                </button>
+              </div>
             </div>
 
             <div className="space-y-4">
-              {messages.length === 0 ? (
-                <div className="p-12 text-center rounded-2xl bg-[#0D0F18] border border-white/[0.08] text-slate-500 font-mono text-xs">
-                  No inquiries received yet. Submissions from the contact form will appear here live.
+              {filteredMessages.length === 0 ? (
+                <div className="p-12 text-center rounded-3xl bg-[#0D0F18] border border-white/[0.08] text-slate-400 space-y-3">
+                  <div className="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/[0.08] flex items-center justify-center mx-auto text-slate-500">
+                    <Inbox className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-base font-semibold text-white">No inquiries found</h3>
+                  <p className="text-xs font-mono text-slate-500 max-w-sm mx-auto">
+                    {inquiryFilter === "unread"
+                      ? "You have caught up on all inquiries! No unread messages."
+                      : inquiryFilter === "read"
+                      ? "No read messages yet."
+                      : "Submissions from your portfolio contact form will appear here in real time."}
+                  </p>
                 </div>
               ) : (
-                messages.map((msg) => (
-                  <div key={msg.id} className="p-6 rounded-2xl bg-[#0D0F18] border border-white/[0.08] space-y-3">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/[0.06] pb-3">
-                      <div>
-                        <div className="text-base font-bold text-white">{msg.name}</div>
-                        <a href={`mailto:${msg.email}`} className="text-xs font-mono text-cyan-400 hover:underline">
-                          {msg.email}
-                        </a>
+                filteredMessages.map((msg) => (
+                  <div
+                    key={msg.id}
+                    className={`p-6 sm:p-7 rounded-3xl border transition-all ${
+                      !msg.is_read
+                        ? "bg-[#0E1220] border-cyan-500/40 shadow-[0_0_25px_rgba(6,182,212,0.1)]"
+                        : "bg-[#0D0F18] border-white/[0.08]"
+                    } space-y-4`}
+                  >
+                    {/* Top Row: Sender Info & Status */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/[0.06] pb-4">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2.5">
+                          <span className="text-base font-bold text-white">{msg.name}</span>
+                          {!msg.is_read ? (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                              NEW
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono text-slate-500 bg-white/[0.03] border border-white/[0.06]">
+                              Read
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-2 text-xs font-mono">
+                          <a
+                            href={`mailto:${msg.email}`}
+                            className="text-cyan-400 hover:underline hover:text-cyan-300"
+                          >
+                            {msg.email}
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => handleCopySenderEmail(msg.id, msg.email)}
+                            className="p-1 text-slate-400 hover:text-cyan-300 rounded transition-colors"
+                            title="Copy email"
+                          >
+                            {copiedEmailId === msg.id ? (
+                              <Check className="w-3.5 h-3.5 text-emerald-400" />
+                            ) : (
+                              <Copy className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+                        </div>
                       </div>
 
-                      <div className="flex items-center gap-3">
-                        <span className="text-xs font-mono text-slate-500">
-                          {new Date(msg.created_at).toLocaleDateString()} {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      {/* Time & Actions */}
+                      <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                        <span className="text-xs font-mono text-slate-500 mr-1">
+                          {new Date(msg.created_at).toLocaleDateString(undefined, {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })}{" "}
+                          •{" "}
+                          {new Date(msg.created_at).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
                         </span>
 
-                        <a
-                          href={`mailto:${msg.email}?subject=Re: ${encodeURIComponent(msg.subject || 'Portfolio Inquiry')}`}
-                          className="px-3 py-1 rounded-lg bg-cyan-950/40 border border-cyan-500/30 text-cyan-300 text-xs font-mono inline-flex items-center gap-1 hover:bg-cyan-900/50"
+                        {/* Mark Read/Unread Button */}
+                        <button
+                          type="button"
+                          onClick={() => handleToggleRead(msg.id, Boolean(msg.is_read))}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono border transition-colors ${
+                            !msg.is_read
+                              ? "bg-white/[0.05] hover:bg-white/[0.1] border-white/10 text-slate-300 hover:text-white"
+                              : "bg-cyan-950/30 hover:bg-cyan-950/50 border-cyan-500/30 text-cyan-300"
+                          }`}
+                          title={!msg.is_read ? "Mark as read" : "Mark as unread"}
                         >
-                          Reply <ArrowUpRight className="w-3 h-3" />
+                          {!msg.is_read ? (
+                            <>
+                              <MailOpen className="w-3.5 h-3.5 text-slate-400" />
+                              <span>Mark Read</span>
+                            </>
+                          ) : (
+                            <>
+                              <MailCheck className="w-3.5 h-3.5 text-cyan-400" />
+                              <span>Mark Unread</span>
+                            </>
+                          )}
+                        </button>
+
+                        {/* Reply Button */}
+                        <a
+                          href={`mailto:${msg.email}?subject=Re: ${encodeURIComponent(
+                            msg.subject || "Portfolio Inquiry"
+                          )}&body=Hi ${encodeURIComponent(msg.name)},%0D%0A%0D%0AThank you for reaching out!%0D%0A%0D%0A`}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-cyan-300 text-xs font-mono font-semibold transition-colors"
+                        >
+                          <span>Reply</span>
+                          <ArrowUpRight className="w-3.5 h-3.5" />
                         </a>
 
+                        {/* Delete Button */}
                         <button
                           type="button"
                           onClick={() => handleDeleteMessage(msg.id)}
-                          className="p-1.5 text-rose-400 hover:text-rose-300"
+                          className="p-2 text-rose-400 hover:text-rose-300 hover:bg-rose-950/40 rounded-xl transition-colors"
                           title="Delete inquiry"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -1054,15 +1244,22 @@ export default function AdminDashboardPage() {
                       </div>
                     </div>
 
+                    {/* Subject */}
                     {msg.subject && (
-                      <div className="text-xs font-mono text-slate-400 uppercase tracking-wider">
-                        Subject: {msg.subject}
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400">
+                          Subject:
+                        </span>
+                        <span className="text-xs font-mono font-semibold text-slate-200 bg-white/[0.04] px-2.5 py-1 rounded-lg border border-white/[0.06]">
+                          {msg.subject}
+                        </span>
                       </div>
                     )}
 
-                    <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-wrap">
+                    {/* Message Body */}
+                    <div className="p-4 rounded-2xl bg-black/40 border border-white/[0.06] text-sm text-slate-200 leading-relaxed whitespace-pre-wrap font-sans">
                       {msg.message}
-                    </p>
+                    </div>
                   </div>
                 ))
               )}

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { verifyAdminSession } from "@/lib/auth";
-import { supabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
+import { supabase, supabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 
 export async function GET() {
   const isAuth = await verifyAdminSession();
@@ -8,8 +8,10 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (isSupabaseConfigured && supabaseAdmin) {
-    const { data, error } = await supabaseAdmin
+  const client = supabaseAdmin || supabase;
+
+  if (isSupabaseConfigured && client) {
+    const { data, error } = await client
       .from("messages")
       .select("*")
       .order("created_at", { ascending: false });
@@ -17,9 +19,12 @@ export async function GET() {
     if (!error && data) {
       return NextResponse.json({ data, source: "database" });
     }
+    if (error) {
+      console.error("Error fetching messages:", error.message || error);
+    }
   }
 
-  // Demo messages if database is not yet hooked up
+  // Demo messages if database is not yet hooked up or in offline fallback mode
   return NextResponse.json({
     data: [
       {
@@ -36,6 +41,44 @@ export async function GET() {
   });
 }
 
+export async function PATCH(request: Request) {
+  const isAuth = await verifyAdminSession();
+  if (!isAuth) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const body = await request.json();
+    const { id, is_read } = body;
+
+    if (!id) {
+      return NextResponse.json({ error: "Missing message id" }, { status: 400 });
+    }
+
+    const client = supabaseAdmin || supabase;
+    if (isSupabaseConfigured && client) {
+      const { data, error } = await client
+        .from("messages")
+        .update({ is_read: Boolean(is_read) })
+        .eq("id", id)
+        .select();
+
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 400 });
+      }
+
+      return NextResponse.json({ success: true, data: data?.[0] });
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Message read status updated (demo mode).",
+    });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}
+
 export async function DELETE(request: Request) {
   const isAuth = await verifyAdminSession();
   if (!isAuth) {
@@ -50,8 +93,9 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "Missing message id" }, { status: 400 });
     }
 
-    if (isSupabaseConfigured && supabaseAdmin) {
-      const { error } = await supabaseAdmin.from("messages").delete().eq("id", id);
+    const client = supabaseAdmin || supabase;
+    if (isSupabaseConfigured && client) {
+      const { error } = await client.from("messages").delete().eq("id", id);
       if (error) {
         return NextResponse.json({ error: error.message }, { status: 400 });
       }
