@@ -2,6 +2,15 @@ import { supabase, supabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import { portfolioData } from "@/data/portfolio";
 import { ProjectItem, ExperienceItem, SkillCategory } from "@/types/portfolio";
 
+function safeImageUrl(url: string | null | undefined): string {
+  if (!url || typeof url !== "string") return "/projects/evo-signal.svg";
+  const trimmed = url.trim();
+  if (trimmed.startsWith("/") || trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return trimmed;
+  }
+  return "/projects/evo-signal.svg";
+}
+
 export async function getProjects(): Promise<ProjectItem[]> {
   const client = supabaseAdmin || supabase;
   if (!isSupabaseConfigured || !client) {
@@ -37,7 +46,7 @@ export async function getProjects(): Promise<ProjectItem[]> {
       metrics: item.metrics || "",
       githubUrl: item.github_url || "",
       liveUrl: item.live_url || "",
-      image: item.image_url || "/projects/evo-signal.svg",
+      image: safeImageUrl(item.image_url),
       featured: Boolean(item.featured),
       bentoSpan: (item.bento_span as "large" | "medium" | "tall") || "medium",
     }));

@@ -63,14 +63,21 @@ export function Projects({ initialProjects }: ProjectsProps = {}) {
               >
                 {/* Project Image Preview Container */}
                 <div className="relative w-full h-64 sm:h-72 overflow-hidden bg-[#07080D] border-b border-white/[0.06]">
-                  <Image
-                    src={project.image}
-                    alt={`${project.title} interface preview`}
-                    width={1200}
-                    height={675}
-                    className="w-full h-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-[1.03]"
-                    priority={index < 2}
-                  />
+                  {(() => {
+                    const isValid = project.image && (project.image.startsWith("/") || project.image.startsWith("http"));
+                    const src = isValid ? project.image : "/projects/evo-signal.svg";
+                    return (
+                      <Image
+                        src={src}
+                        alt={`${project.title} interface preview`}
+                        width={1200}
+                        height={675}
+                        className="w-full h-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+                        priority={index < 2}
+                        unoptimized
+                      />
+                    );
+                  })()}
 
                   {/* Gradient Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-[#0D0F18] via-transparent to-transparent opacity-80" />
