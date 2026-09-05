@@ -60,25 +60,35 @@ CREATE TABLE IF NOT EXISTS public.messages (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Enable Row Level Security (RLS)
-ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.experience ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.skills ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
+-- Drop any existing policies to prevent conflicts
+DROP POLICY IF EXISTS "Allow public read access on projects" ON public.projects;
+DROP POLICY IF EXISTS "Allow public read access on experience" ON public.experience;
+DROP POLICY IF EXISTS "Allow public read access on skills" ON public.skills;
+DROP POLICY IF EXISTS "Allow public insert on messages" ON public.messages;
+DROP POLICY IF EXISTS "Service role full access on projects" ON public.projects;
+DROP POLICY IF EXISTS "Service role full access on experience" ON public.experience;
+DROP POLICY IF EXISTS "Service role full access on skills" ON public.skills;
+DROP POLICY IF EXISTS "Service role full access on messages" ON public.messages;
+DROP POLICY IF EXISTS "Allow all on projects" ON public.projects;
+DROP POLICY IF EXISTS "Allow all on experience" ON public.experience;
+DROP POLICY IF EXISTS "Allow all on skills" ON public.skills;
+DROP POLICY IF EXISTS "Allow all on messages" ON public.messages;
 
--- Public read access policies
-CREATE POLICY "Allow public read access on projects" ON public.projects FOR SELECT USING (true);
-CREATE POLICY "Allow public read access on experience" ON public.experience FOR SELECT USING (true);
-CREATE POLICY "Allow public read access on skills" ON public.skills FOR SELECT USING (true);
+-- OPTION 1: Disable RLS completely (simplest & most reliable for personal portfolio where /admin is password-protected)
+ALTER TABLE public.projects DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.experience DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.skills DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.messages DISABLE ROW LEVEL SECURITY;
 
--- Public write access on messages (for website visitors to contact you)
-CREATE POLICY "Allow public insert on messages" ON public.messages FOR INSERT WITH CHECK (true);
-
--- Full access for service role (admin API routes)
-CREATE POLICY "Service role full access on projects" ON public.projects USING (auth.jwt() ->> 'role' = 'service_role');
-CREATE POLICY "Service role full access on experience" ON public.experience USING (auth.jwt() ->> 'role' = 'service_role');
-CREATE POLICY "Service role full access on skills" ON public.skills USING (auth.jwt() ->> 'role' = 'service_role');
-CREATE POLICY "Service role full access on messages" ON public.messages USING (auth.jwt() ->> 'role' = 'service_role');
+-- OPTION 2 (Alternative if you prefer RLS enabled with full open permissions):
+-- ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE public.experience ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE public.skills ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
+-- CREATE POLICY "Allow all on projects" ON public.projects FOR ALL USING (true) WITH CHECK (true);
+-- CREATE POLICY "Allow all on experience" ON public.experience FOR ALL USING (true) WITH CHECK (true);
+-- CREATE POLICY "Allow all on skills" ON public.skills FOR ALL USING (true) WITH CHECK (true);
+-- CREATE POLICY "Allow all on messages" ON public.messages FOR ALL USING (true) WITH CHECK (true);
 
 -- ==============================================================================
 -- Initial Seed Data: Populating your real projects, experience & skills
