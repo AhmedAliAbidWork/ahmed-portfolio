@@ -98,12 +98,13 @@ export async function getExperience(): Promise<ExperienceItem[]> {
 }
 
 export async function getSkillsCategories(): Promise<SkillCategory[]> {
-  if (!isSupabaseConfigured || !supabase) {
+  const client = supabaseAdmin || supabase;
+  if (!isSupabaseConfigured || !client) {
     return portfolioData.skills.categories;
   }
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from("skills")
       .select("*")
       .order("sort_order", { ascending: true });
@@ -140,7 +141,8 @@ export async function getSkillsCategories(): Promise<SkillCategory[]> {
       });
     });
 
-    return Object.values(categoryMap);
+    const populated = Object.values(categoryMap).filter((c) => c.skills.length > 0);
+    return populated.length > 0 ? populated : portfolioData.skills.categories;
   } catch (err) {
     console.error("Error fetching skills from Supabase:", err);
     return portfolioData.skills.categories;
